@@ -52,35 +52,25 @@ class I2Cssh
     end
 
     def split_session
+        splitmap = {
+            :column => {0 => "d", 1 => 123, 2 => "D", 3=> 124, :x => @columns, :y => @rows}, 
+            :row => {0 => "D", 1=> 126, 2 => "d", 3=> 125, :x => @rows, :y => @columns}
+        }
+        splitconfig = splitmap[@i2_options[:direction]]
+
         first = true
-        if @i2_options[:open_by_row] then
-            2.upto @rows do
-              @sys_events.keystroke "D", :using => :command_down
-            end
-            2.upto @columns do
-              1.upto @rows do
-                @sys_events.key_code 126, :using => [:command_down, :option_down] unless first
-                first = false
-              end
-              @rows.times do |x|
-                @sys_events.keystroke "d", :using => :command_down
-                @sys_events.key_code 125, :using => [:command_down, :option_down] unless @columns - 1 == x
-              end
-            end
-        else
-            2.upto @columns do
-              @sys_events.keystroke "d", :using => :command_down
-            end
-            2.upto @rows do
-              1.upto @columns do
-                @sys_events.key_code 123, :using => [:command_down, :option_down] unless first
-                first = false
-              end
-              @columns.times do |x|
-                @sys_events.keystroke "D", :using => :command_down
-                @sys_events.key_code 124, :using => [:command_down, :option_down] unless @columns - 1 == x
-              end
-            end
+        2.upto splitconfig[:x] do
+          @sys_events.keystroke splitconfig[0], :using => :command_down
+        end
+        2.upto splitconfig[:y] do
+          1.upto splitconfig[:x] do
+            @sys_events.key_code splitconfig[1], :using => [:command_down, :option_down] unless first
+            first = false
+          end
+          splitconfig[:x].times do |x|
+            @sys_events.keystroke splitconfig[2], :using => :command_down
+            @sys_events.key_code splitconfig[3], :using => [:command_down, :option_down] unless @columns - 1 == x
+          end
         end
     end
 
@@ -104,7 +94,9 @@ class I2Cssh
                     send_env = "-o SendEnv=#{@ssh_environment.keys.join(",")}"
                     @term.sessions[i].write :text => "#{@ssh_environment.map{|k,v| "export #{k}=#{v}"}.join('; ')}"
                 end
-
+                if @i2_options[:sleep] then
+                    sleep @i2_options[:sleep] * i
+                end
                 @term.sessions[i].write :text => "unset HISTFILE && echo -e \"\\033]50;SetProfile=#{@profile}\\a\" && #{@ssh_prefix} #{send_env} #{server}"
             else
                 

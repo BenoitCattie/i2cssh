@@ -24,6 +24,8 @@ to all sessions.
     -c, --cluster CLUSTERNAME        Name of the cluster specified in ~/.i2csshrc
     -r, --rank                       Send LC_RANK with the host number as environment variable
     -m, --machines a,b,c             Comma-separated list of hosts
+    -s, --sleep SLEEP                Number of seconds to sleep between creating SSH sessions
+    -X, --extra EXTRA_PARAM          Additional ssh parameters (e.g. -Xi=myidentity.pem)
 
 i2cssh will assume you want to connect to a cluster when only one host is given.
 
@@ -36,7 +38,7 @@ The following commands are exactly the same, however, they might serve different
 
 Using the `-l` option will override all usernames:
 
-    $ i2css -l foo user1@host1 user2@host2
+    $ i2cssh -l foo user1@host1 user2@host2
 
 This will connect to both `host1` and `host2` as the user `foo`
 
@@ -62,7 +64,8 @@ Optional parameters can be used globablly or per cluster and include:
     rank: (true/false)          # Enable sending LC_RANK as an environment variable
     columns: <cols>             # Amount of columns
     rows: <rows>                # Amount of rows
-    open_by_row: (true/false)	# Default : false - Setting true open hosts on by row rather than columns
+    sleep: <secs>               # Seconds to sleep between creating SSH sessions
+    direction: (column/row)     # Direction that new sessions are created (default: column)
 
     environment:                # Send the following enviroment variables
         - LC_FOO: foo
@@ -136,6 +139,28 @@ Send a LC_RANK environment variable different for each host (from 0 to n)
 
 Connect to the machines a, b and c
 
+### -s, --sleep SLEEP
+
+Wait SLEEP seconds between starting each ssh session. This will take decimals as well (0.5 for half a second)
+
+### -X, --extra EXTRA
+
+Set extra ssh parameters in the form -Xk=v. For example:
+
+    i2cssh -Xi=myidentity.pem
+
+will result in 
+
+    ssh -i myidentity.pem
+
+Or,
+
+    i2cssh -Xp=2222 -XL=8080:localhost:8080
+
+will result in
+
+    ssh -p 2222 -L 8080:localhost:8080
+
 ## Known issues
 
 - i2cssh uses rb-appscript and that only seems to work on ruby 1.8.7 and breaks on 1.9.x
@@ -143,6 +168,7 @@ Connect to the machines a, b and c
 ## TODO
 
 - Functional parity with csshX (as far as possible)
+- -X support in config file
 
 ## Contributing to i2cssh
 
